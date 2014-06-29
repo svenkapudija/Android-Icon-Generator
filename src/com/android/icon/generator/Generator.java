@@ -26,7 +26,7 @@ public class Generator {
         CommandLine cmd = parser.parse(options, args);
         if(cmd.hasOption("h")) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("aig [options]", options);
+            formatter.printHelp("aig inputFile/fontAwesomeIcon [options]", options);
             return;
         }
 
@@ -40,25 +40,19 @@ public class Generator {
             return;
         }
 
-        boolean isInputFontAwesome = cmd.hasOption("fa");
-        if(!isInputFontAwesome && !cmd.hasOption("i")) {
-            System.out.println("Input file/directory or font awesome icon is required. See --help for usage.");
+        if(args.length == 0) {
+            System.out.println("Input file/directory or FontAwesome icon is required. See --help for usage.");
             return;
         }
 
-        String inputFilePath = cmd.getOptionValue("i");
-        if(isInputFontAwesome) {
-           inputFilePath = cmd.getOptionValue("fa");
+        String input = args[0];
+        File inputFile = new File(input);
+        if(!inputFile.exists() && !fontAwesomeMappingContains(input)) {
+            System.out.println("Input file/directory or FontAwesome icon identifier doesn't exist.");
+            return;
         }
 
-        File inputFile = new File(inputFilePath);
-        if(!isInputFontAwesome && !inputFile.exists()) {
-            System.out.println("Input file or directory doesn't exist.");
-            return;
-        } else if(isInputFontAwesome && !fontAwesomeMappingContains(inputFilePath)) {
-            System.out.println("Unknown Font Awesome icon identifier '" + inputFilePath + "'. See --help for usage.");
-            return;
-        }
+        boolean isInputFontAwesome = !inputFile.exists();
 
         IconType iconType = parseIconType(cmd);
         List<AndroidTheme> androidThemes = parseAndroidThemes(cmd);
@@ -83,11 +77,11 @@ public class Generator {
                 }
             } else {
                 String outputFilePath = cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.home");
-                outputFilePath = FilenameUtils.concat(outputFilePath, inputFilePath);
+                outputFilePath = FilenameUtils.concat(outputFilePath, input);
 
                 try {
                     FontAwesome fontAwesome = new FontAwesome();
-                    BufferedImage inputImage = fontAwesome.convertToImage(inputFilePath);
+                    BufferedImage inputImage = fontAwesome.convertToImage(input);
                     generateIcon(inputImage, generateOutputFile(outputFilePath, androidTheme), generator, dipList);
                 } catch (FontFormatException e) {
                     e.printStackTrace();
@@ -226,23 +220,9 @@ public class Generator {
                 .hasArgs()
                 .withValueSeparator(',')
                 .withDescription("use given Android theme(s)\n-hl,--holo-light\n-hd,--holo-dark\nIf none is provided, all themes are included.")
-                .withLongOpt("theme")
+                .withLongOpt("themes")
                 .create("t");
         options.addOption(themeOption);
-
-        Option fontAwesomeInput = OptionBuilder.withArgName("icon")
-                .hasArg()
-                .withDescription("use given FontAwesome icon identifier as input (ex. fa-car)")
-                .withLongOpt("font-awesome")
-                .create("fa");
-        options.addOption(fontAwesomeInput);
-
-        Option inputFileOption = OptionBuilder.withArgName("file")
-                .hasArg()
-                .withDescription("use given file or directory as image input")
-                .withLongOpt("input")
-                .create("i");
-        options.addOption(inputFileOption);
 
         Option outputFileOption = OptionBuilder.withArgName("file")
                 .hasArg()
