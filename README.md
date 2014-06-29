@@ -23,12 +23,6 @@ See more at [Android Design - Iconography](http://developer.android.com/design/s
                                      are included.
      -ab,--action-bar                generate action bar icon type (default)
      -b,--bundle                     put every icon into own folder
-     -ldpi                           generate ldpi density
-     -mdpi                           generate mdpi density
-     -hdpi                           generate hdpi density
-     -xhdpi                          generate xhdpi density
-     -xxhdpi                         generate xxhdpi density
-     -xxxhdpi                        generate xxxhdpi density
      -u,--update                     update FontAwesome icons
      -h,--help                       help
     
