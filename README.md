@@ -26,8 +26,6 @@ See more at [Android Design - Iconography](http://developer.android.com/design/s
      -u,--update                     update FontAwesome icons
      -h,--help                       help
     
-Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.jar` instead.
-    
 ### Generate icon from file
     
     // Specify input image file path
