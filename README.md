@@ -6,7 +6,7 @@ Tool used to generate icons for [Android Action Bar Icons](https://github.com/sv
 Currently supports only Action Bar Icon style (in all densities and in both `holo_dark` and `holo_light`).
 Planned support for notification/status-bar and small/contextual icons.
 
-See more at [Android Design - Iconography](developer.android.com/design/style/iconography.html).
+See more at [Android Design - Iconography](http://developer.android.com/design/style/iconography.html).
 
 Planned CLI support (so you can run the program `.jar` directly from the command line).
 
