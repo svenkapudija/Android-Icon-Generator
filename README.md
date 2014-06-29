@@ -70,7 +70,8 @@ Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.j
     aig myImage.png
     
     // Only xxhdpi and xhdpi versions are created
-    aig myImage.png -xxhdpi -xhdpi
+    aig myImage.png -d xxhdpi,xhdpi
+    aig myImage.png -d xxh,xh
 
 ### Themes
 
