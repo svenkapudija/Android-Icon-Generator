@@ -48,7 +48,7 @@ Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.j
     
     // Specify output directory
     aig fa-car -o myDir/outputDir
-    aig myImage.png -output myDir/outputDir
+    aig myImage.png --output myDir/outputDir
 
 ### Bundle
 
@@ -57,6 +57,7 @@ Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.j
     
     // Output will be /icon_fa_car/drawable-hdpi/icon_fa_car.png
     aig fa-car -b
+    aig fa-car --bundle
 
 ### Density
 
@@ -64,7 +65,7 @@ Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.j
     aig myImage.png
     
     // Only xxhdpi and xhdpi versions are created
-    aig myImage.png -d xxhdpi,xhdpi
+    aig myImage.png -densities xxhdpi,xhdpi
     aig myImage.png -d xxh,xh
 
 ### Themes
