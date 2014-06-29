@@ -18,7 +18,11 @@ See more at [Android Design - Iconography](http://developer.android.com/design/s
                                      -hd,--holo-dark
                                      If none is provided, all themes are
                                      included.
+     -d,--densities <dpi1, dpi2,...> use specific densities (dpi suffix is
+                                     optional). If none is provided, all densities
+                                     are included.
      -ab,--action-bar                generate action bar icon type (default)
+     -b,--bundle                     put every icon into own folder
      -ldpi                           generate ldpi density
      -mdpi                           generate mdpi density
      -hdpi                           generate hdpi density
@@ -52,6 +56,14 @@ Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.j
     aig fa-car -o myDir/outputDir
     aig myImage.png -output myDir/outputDir
 
+### Bundle
+
+    // Output will be /drawable-hdpi/icon_fa_car.png
+    aig fa-car
+    
+    // Output will be /icon_fa_car/drawable-hdpi/icon_fa_car.png
+    aig fa-car -b
+
 ### Density
 
     // All 6 densities are created
@@ -63,9 +75,11 @@ Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.j
 ### Themes
 
     // Both holo_light and holo_dark are created
+    // each into own folder
     aig myImage.png
     
     // Only holo_light is created
+    // No extra folder is created like in previous example
     aig myImage.png -t hl
     aig myImage.png --themes holo-light
     
