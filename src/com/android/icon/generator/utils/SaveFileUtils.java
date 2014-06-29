@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class FileUtils {
+public class SaveFileUtils {
 
     public static void saveAsDrawable(BufferedImage image, File file, DIP dip) throws IOException {
         if(!file.exists()) {

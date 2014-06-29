@@ -2,7 +2,7 @@ package com.android.icon.generator.fontawesome;
 
 import com.android.icon.generator.core.AndroidIconGenerator;
 import com.android.icon.generator.core.DIP;
-import com.android.icon.generator.utils.FileUtils;
+import com.android.icon.generator.utils.SaveFileUtils;
 import com.android.icon.generator.utils.FontUtils;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -32,42 +32,24 @@ public class FontAwesome {
      *
      * @param iconGenerator
      * @param outputDirectory
-     * @param forceNew  If <code>true</code>, local cached files (if any) will be deleted and all mappings
-     *                  and font files will be freshly downloaded.
      * @throws IOException
      * @throws FontFormatException
      */
-    public void generateAllIcons(AndroidIconGenerator iconGenerator, File outputDirectory, boolean forceNew) throws IOException, FontFormatException {
-        if(forceNew) {
-            clearCache();
-        }
-
+    public void generateAllIcons(AndroidIconGenerator iconGenerator, File outputDirectory) throws IOException, FontFormatException {
         System.out.println("Generating FontAwesome icons...");
 
-        Map<String, Character> icons = getIcons();
+        Map<String, Character> icons = getIcons(false);
         for(Map.Entry<String, Character> entry : icons.entrySet()) {
             BufferedImage originalImage = convertToImage(entry.getKey());
             String outputPath = FilenameUtils.concat(outputDirectory.getAbsolutePath(), "ic_" + entry.getKey().replace("-", "_"));
 
             for(DIP dip : DIP.values()) {
                 BufferedImage image = iconGenerator.generateIcon(originalImage, dip);
-                FileUtils.saveAsDrawable(image, new File(outputPath), dip);
+                SaveFileUtils.saveAsDrawable(image, new File(outputPath), dip);
             }
         }
 
         System.out.println(icons.size() + " icons generated.");
-    }
-
-    private void clearCache() {
-        File mappingFile = new File(MAPPING_PATH);
-        if(mappingFile.exists()) {
-            mappingFile.delete();
-        }
-
-        File fontPath = new File(FONT_PATH);
-        if(fontPath.exists()) {
-            fontPath.delete();
-        }
     }
 
     /**
@@ -79,48 +61,11 @@ public class FontAwesome {
      * @throws FontFormatException
      */
     public BufferedImage convertToImage(String iconId) throws IOException, FontFormatException {
-        return FontUtils.convertStringToImage(getFontFile(), getIcons().get(iconId), 512f);
+        return FontUtils.convertStringToImage(getFontFile(false), getIcons(false).get(iconId), 512f);
     }
 
-    /**
-     * Retrieves mapping file from the local file or downloads (generates) it if it doesn't exist.
-     * Mapping file contains key-value pairs where key is icon identifier (ex. <code>fa-car</code>)
-     * and value is it's unicode character (ex. <code>\uF1B9</code>).
-     *
-     * @return
-     * @throws IOException
-     */
-    private Map<String, Character> getIcons() throws IOException {
-        Properties properties = new Properties();
-
-        if(!new File(MAPPING_PATH).exists()) {
-            System.out.println("Font Awesome mapping file doesn't exist. Creating new one...");
-
-            new File(FilenameUtils.getFullPath(MAPPING_PATH)).mkdirs();
-
-            Document document = Jsoup.connect("http://fortawesome.github.io/Font-Awesome/icons/").get();
-            Elements links = document.getElementsByTag("a");
-
-            for(int i = 0; i < links.size(); i++) {
-                Element link = links.get(i);
-                String href = link.attr("abs:href");
-                if (href.startsWith("http://fortawesome.github.io/Font-Awesome/icon/")) {
-                    String idOrAlias = link.text().replace(" (alias)", "");
-
-                    String key = idOrAlias;
-                    String value = Character.toString(getUnicode(href));
-                    properties.put(key, value);
-                }
-
-                int percentage = (int) ((double) i/links.size()*100);
-                System.out.print("\rIn progress " + percentage + "%" + "...");
-            }
-
-            properties.store(new FileOutputStream(MAPPING_PATH), null);
-            System.out.println("\nFont Awesome mapping created.");
-        }
-
-        properties.load(new InputStreamReader(new FileInputStream(MAPPING_PATH), "UTF-8"));
+    public Map<String, Character> getIcons(boolean update) throws IOException {
+        Properties properties = getMappingFile(update);
 
         Map<String, Character> icons = new HashMap<String, Character>();
         for(Map.Entry<Object, Object> entry : properties.entrySet()) {
@@ -132,16 +77,78 @@ public class FontAwesome {
         return icons;
     }
 
+    public void updateIcons() throws IOException {
+        getMappingFile(true);
+        getFontFile(true);
+    }
+
+    /**
+     * Retrieves mapping file from the local file or downloads (generates) it if it doesn't exist.
+     * Mapping file contains key-value pairs where key is icon identifier (ex. <code>fa-car</code>)
+     * and value is it's unicode character (ex. <code>\uF1B9</code>).
+     *
+     * @param update
+     * @return
+     * @throws IOException
+     */
+    private Properties getMappingFile(boolean update) throws IOException {
+        Properties properties = new Properties();
+
+        boolean download = !new File(MAPPING_PATH).exists();
+        if(download) {
+            System.out.println("Font Awesome mapping file doesn't exist. Creating new one...");
+            new File(FilenameUtils.getFullPath(MAPPING_PATH)).mkdirs();
+        } else if(update) {
+            System.out.println("Updating Font Awesome mapping file...");
+            properties.load(new InputStreamReader(new FileInputStream(MAPPING_PATH), "UTF-8"));
+        } else {
+            properties.load(new InputStreamReader(new FileInputStream(MAPPING_PATH), "UTF-8"));
+            return properties;
+        }
+
+        Document document = Jsoup.connect("http://fortawesome.github.io/Font-Awesome/icons/").get();
+        Elements links = document.getElementsByTag("a");
+
+        for(int i = 0; i < links.size(); i++) {
+            Element link = links.get(i);
+            String href = link.attr("abs:href");
+            String iconid = link.text().replace(" (alias)", "");
+
+            if (!properties.containsKey(iconid) && href.startsWith("http://fortawesome.github.io/Font-Awesome/icon/")) {
+                String key = iconid;
+                String value = Character.toString(getUnicode(href));
+                properties.put(key, value);
+            }
+
+            int percentage = (int) ((double) i/links.size()*100);
+            System.out.print("\rIn progress " + percentage + "%" + "...");
+        }
+
+        properties.store(new FileOutputStream(MAPPING_PATH), null);
+
+        if(download) {
+            System.out.println("\nFont Awesome mapping created.");
+        } else {
+            System.out.println("\nFont Awesome mapping updated.");
+        }
+
+        return properties;
+    }
+
     /**
      * Get font file from local file or download if it doesn't exist.
      *
      * @return
      * @throws IOException
      */
-    private File getFontFile() throws IOException {
+    private File getFontFile(boolean forceDownload) throws IOException {
         File fontFile = new File(FONT_PATH);
-        if(!fontFile.exists()) {
-            System.out.println("Font Awesome TTF font file not found. Downloading...");
+        if(forceDownload || !fontFile.exists()) {
+            if(!fontFile.exists()) {
+                System.out.println("Font Awesome TTF font file not found. Downloading...");
+            } else {
+                System.out.println("Font Awesome TTF font is being updated. Downloading...");
+            }
 
             new File(FilenameUtils.getFullPath(FONT_PATH)).mkdirs();
 
