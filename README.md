@@ -1,4 +1,4 @@
-Android Icon Generator
+Android Icon Generator (AIG)
 ======================
 
 Tool used to generate icons for [Android Action Bar Icons](https://github.com/svenkapudija/Android-Action-Bar-Icons).
@@ -18,7 +18,11 @@ See more at [Android Design - Iconography](http://developer.android.com/design/s
                                      -hd,--holo-dark
                                      If none is provided, all themes are
                                      included.
+     -d,--densities <dpi1, dpi2,...> use specific densities (dpi suffix is
+                                     optional). If none is provided, all densities
+                                     are included.
      -ab,--action-bar                generate action bar icon type (default)
+     -b,--bundle                     put every icon into own folder
      -ldpi                           generate ldpi density
      -mdpi                           generate mdpi density
      -hdpi                           generate hdpi density
@@ -28,50 +32,63 @@ See more at [Android Design - Iconography](http://developer.android.com/design/s
      -u,--update                     update FontAwesome icons
      -h,--help                       help
     
+Add your `aig.jar` to `PATH` so you can use `aig` syntax or use `java -jar aig.jar` instead.
+    
 ### Generate icon from file
     
     // Specify input image file path
-    java -jar aig.jar myImage.png
+    aig myImage.png
 
 ### Generate icon from FontAwesome icon
 
     // Specify FontAwesome icon identifier instead of input file
-    java -jar aig.jar fa-car
+    aig fa-car
 
 ### Output directory
 
     // User home directory is used
-    java -jar aig.jar fa-car
+    aig fa-car
     
     // Input file directory is used
-    java -jar aig.jar myImage.png
+    aig myImage.png
     
     // Specify output directory
-    java -jar aig.jar fa-car -o myDir/outputDir
-    java -jar aig.jar myImage.png -output myDir/outputDir
+    aig fa-car -o myDir/outputDir
+    aig myImage.png -output myDir/outputDir
+
+### Bundle
+
+    // Output will be /drawable-hdpi/icon_fa_car.png
+    aig fa-car
+    
+    // Output will be /icon_fa_car/drawable-hdpi/icon_fa_car.png
+    aig fa-car -b
 
 ### Density
 
     // All 6 densities are created
-    java -jar aig.jar myImage.png
+    aig myImage.png
     
     // Only xxhdpi and xhdpi versions are created
-    java -jar aig.jar myImage.png -xxhdpi -xhdpi
+    aig myImage.png -d xxhdpi,xhdpi
+    aig myImage.png -d xxh,xh
 
 ### Themes
 
     // Both holo_light and holo_dark are created
-    java -jar aig.jar myImage.png
+    // each into own folder
+    aig myImage.png
     
     // Only holo_light is created
-    java -jar aig.jar myImage.png -t hl
-    java -jar aig.jar myImage.png --themes holo-light
+    // No extra folder is created like in previous example
+    aig myImage.png -t hl
+    aig myImage.png --themes holo-light
     
 ### FontAwesome files are out-dated
 
     // Update them via
-    java -jar aig.jar -u
-    java -jar aig.jar --update
+    aig -u
+    aig --update
 
 
 
