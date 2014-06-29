@@ -20,10 +20,12 @@ import java.util.List;
 
 public class Generator {
 
+    private static CommandLine cmd;
+
     public static void main(String[] args) throws ParseException, IOException {
         Options options = prepareOptions();
         CommandLineParser parser = new GnuParser();
-        CommandLine cmd = parser.parse(options, args);
+        cmd = parser.parse(options, args);
         if(cmd.hasOption("h")) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("aig inputFile/fontAwesomeIcon [options]", options);
@@ -54,9 +56,9 @@ public class Generator {
 
         boolean isInputFontAwesome = !inputFile.exists();
 
-        IconType iconType = parseIconType(cmd);
-        List<AndroidTheme> androidThemes = parseAndroidThemes(cmd);
-        List<DIP> dipList = parseDensities(cmd);
+        IconType iconType = parseIconType();
+        List<AndroidTheme> androidThemes = parseAndroidThemes();
+        List<DIP> dipList = parseDensities();
 
         for(AndroidTheme androidTheme : androidThemes) {
             AndroidIconGenerator generator = null;
@@ -101,7 +103,7 @@ public class Generator {
             outputFilePath = file.getAbsolutePath();
         }
 
-        List<DIP> dipList = parseDensities(cmd);
+        List<DIP> dipList = parseDensities();
         generateIcon(file, generateOutputFile(outputFilePath, androidTheme), generator, dipList);
     }
 
@@ -121,12 +123,16 @@ public class Generator {
 
     private static File generateOutputFile(String path, AndroidTheme androidTheme) {
         String outputFilePath = FilenameUtils.getFullPath(path);
-        outputFilePath = FilenameUtils.concat(outputFilePath, androidTheme.toString().toLowerCase());
+        if(parseAndroidThemes().size() > 1) {
+            outputFilePath = FilenameUtils.concat(outputFilePath, androidTheme.toString().toLowerCase());
+        }
 
         String fileName = FilenameUtils.getBaseName(path);
         fileName = fileName.replace(" ", "_").replace("-", "_");
         fileName = fileName.replaceAll("[^0-9A-Za-z_]", "");
-        outputFilePath = FilenameUtils.concat(outputFilePath, "ic_" + fileName);
+        if(cmd.hasOption("b")) {
+            outputFilePath = FilenameUtils.concat(outputFilePath, "ic_" + fileName);
+        }
 
         return new File(outputFilePath);
     }
@@ -157,22 +163,26 @@ public class Generator {
         }
     }
 
-    private static List<DIP> parseDensities(CommandLine cmd) {
+    private static List<DIP> parseDensities() {
         List<DIP> dipList = new ArrayList<DIP>();
-        for(DIP dip : DIP.values()) {
-            if(cmd.hasOption(dip.toString().toLowerCase())) {
-                dipList.add(dip);
-            }
-        }
 
-        if(dipList.size() == 0) {
+        String[] densities = cmd.getOptionValues("d");
+        if(densities != null && densities.length > 0) {
+            for(String densityString : densities) {
+                densityString = densityString.replace("dpi", "");
+                DIP density = DIP.valueOf((densityString + "dpi").toUpperCase());
+                if(density != null) {
+                    dipList.add(density);
+                }
+            }
+        } else {
             dipList.addAll(Arrays.asList(DIP.values()));
         }
 
         return dipList;
     }
 
-    private static List<AndroidTheme> parseAndroidThemes(CommandLine cmd) {
+    private static List<AndroidTheme> parseAndroidThemes() {
         List<AndroidTheme> androidThemes = new ArrayList<AndroidTheme>();
 
         String[] themes = cmd.getOptionValues("t");
@@ -191,7 +201,7 @@ public class Generator {
         return androidThemes;
     }
 
-    private static IconType parseIconType(CommandLine cmd) {
+    private static IconType parseIconType() {
         IconType iconType = IconType.ACTION_BAR;
         if(cmd.hasOption("ab")) {
             iconType = IconType.ACTION_BAR;
@@ -208,13 +218,16 @@ public class Generator {
 
         options.addOption("h", "help", false, "help");
         options.addOption("u", "update", false, "update FontAwesome icons");
-
-        for(DIP dip : DIP.values()) {
-            String dipString = dip.toString().toLowerCase();
-            options.addOption(dipString, false, String.format("generate %s density", dipString));
-        }
-
         options.addOption("ab", "action-bar", false, "Action Bar Icon");
+        options.addOption("b", "bundle", false, "put every icon into own folder");
+
+        Option densityOption = OptionBuilder.withArgName("dpi1,dpi2...")
+                .hasArgs()
+                .withValueSeparator(',')
+                .withDescription("use specific densities (dpi suffix is optional)\nIf none is provided, all densities are included.")
+                .withLongOpt("densities")
+                .create("d");
+        options.addOption(densityOption);
 
         Option themeOption = OptionBuilder.withArgName("theme1,theme2...")
                 .hasArgs()
